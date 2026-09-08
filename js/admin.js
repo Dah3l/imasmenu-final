@@ -104,7 +104,7 @@ function renderAdminProducts() {
         </div>
         <div class="admin-product-meta">
           <div class="item"><span class="label">Precio</span><span class="value">${fmt(p.price, config.business.currency)}</span></div>
-          <div class="item"><span class="label">Unidad</span><span class="value">${p.unit}</span></div>
+          <div class="item"><span class="label">Stock</span><span class="value ${p.stock <= 0 ? "stock-zero" : ""}">${p.stock != null ? p.stock : "—"}</span></div>
           <div class="item"><span class="label">Sección</span><span class="value">${section ? section.name : "-"}</span></div>
           <div class="item"><span class="label">Tipo</span><span class="value">${p.type === "sin_freir" ? "Sin freír" : "Preparado"}</span></div>
         </div>
@@ -206,18 +206,20 @@ function openEditModal(id = null) {
     $("#editType").value = p.type;
     $("#editCategory").value = p.category;
     $("#editUnit").value = p.unit;
-    $("#editPrice").value = p.price;
-    selectEmoji(p.icon || getIcon(p.category, p.id));
-  } else {
-    $("#editTitle").textContent = "Nuevo producto";
-    $("#editId").value = "";
-    $("#editName").value = "";
-    $("#editSection").value = sections[0].id;
-    $("#editType").value = "sin_freir";
-    $("#editCategory").value = "";
-    $("#editUnit").value = "";
-    $("#editPrice").value = "";
-    selectEmoji("🍽️");
+$("#editPrice").value = p.price;
+      $("#editStock").value = p.stock != null ? p.stock : 0;
+      selectEmoji(p.icon || getIcon(p.category, p.id));
+    } else {
+      $("#editTitle").textContent = "Nuevo producto";
+      $("#editId").value = "";
+      $("#editName").value = "";
+      $("#editSection").value = sections[0].id;
+      $("#editType").value = "sin_freir";
+      $("#editCategory").value = "";
+      $("#editUnit").value = "";
+      $("#editPrice").value = "";
+      $("#editStock").value = "0";
+      selectEmoji("🍽️");
   }
 
   ["editName","editCategory","editUnit","editPrice"].forEach(fid => {
@@ -251,6 +253,8 @@ function saveEditProduct() {
   const category = $("#editCategory").value.trim();
   const unit = $("#editUnit").value.trim();
   const price = parseInt($("#editPrice").value, 10);
+  const stockVal = parseInt($("#editStock").value, 10);
+  const stock = isNaN(stockVal) || stockVal < 0 ? 0 : stockVal;
   const icon = selectedEmoji || "🍽️";
 
   let valid = true;
@@ -269,13 +273,15 @@ function saveEditProduct() {
     if (p) {
       p.name = name; p.sectionId = sectionId; p.type = type;
       p.category = category; p.unit = unit; p.price = price; p.icon = icon;
+      p.stock = stock;
+      if (stock <= 0) p.active = false;
     }
     showToast(`"${name}" actualizado`, "✓");
   } else {
     const newId = uid();
     products.push({
       id: newId, name, sectionId, type, category, unit, price, icon,
-      active: true
+      active: stock > 0, stock
     });
     showToast(`"${name}" creado`, "✨");
   }
