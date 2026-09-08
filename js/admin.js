@@ -104,7 +104,7 @@ function renderAdminProducts() {
         </div>
         <div class="admin-product-meta">
           <div class="item"><span class="label">Precio</span><span class="value">${fmt(p.price, config.business.currency)}</span></div>
-          <div class="item"><span class="label">Stock</span><span class="value ${p.stock <= 0 ? "stock-zero" : ""}">${p.stock != null ? p.stock : "—"}</span></div>
+          <div class="item"><span class="label">Stock disponible</span><span class="value ${p.stock <= 0 ? "stock-zero" : p.stock <= 5 ? "stock-low" : ""}">${p.stock != null ? p.stock : "—"}</span></div>
           <div class="item"><span class="label">Sección</span><span class="value">${section ? section.name : "-"}</span></div>
           <div class="item"><span class="label">Tipo</span><span class="value">${p.type === "sin_freir" ? "Sin freír" : "Preparado"}</span></div>
         </div>
@@ -356,4 +356,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.key === "Escape" && $("#editModal").classList.contains("open")) closeEditModal();
   });
   checkAuth();
+
+  window.addEventListener("storage", (event) => {
+    if (event.key !== "imas_products") return;
+    if (sessionStorage.getItem("imas_admin_session") !== "true") return;
+    renderAdminProducts();
+    renderSectionsList();
+  });
 });

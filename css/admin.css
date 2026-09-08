@@ -207,6 +207,7 @@ body { background: #f5e9d7; }
 .admin-product-meta .item { display: flex; flex-direction: column; gap: 2px; }
 .admin-product-meta .label { font-size: 10px; color: var(--brown-700); text-transform: uppercase; letter-spacing: 0.3px; font-weight: 600; }
 .admin-product-meta .value { color: var(--brown-900); font-weight: 600; }
+.admin-product-meta .stock-low { color: var(--terracotta-dark); }
 
 .admin-product-actions { display: flex; gap: 6px; margin-top: auto; }
 .admin-btn-action {

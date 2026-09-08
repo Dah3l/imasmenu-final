@@ -9,6 +9,7 @@ let state = {
   modalProduct: null,
   modalQty: 1
 };
+let checkoutInProgress = false;
 
 function saveCart() { localStorage.setItem("imas_cart", JSON.stringify(state.cart)); }
 
@@ -264,16 +265,20 @@ function renderCart() {
   }
 
   const currency = config.business.currency;
+  const stockIssues = getCartStockIssues();
   body.innerHTML = state.cart.map(item => {
     const products = getProducts();
     const prod = products.find(p => p.id === item.id);
     const icon = prod ? getIcon(prod.category, prod.id) : "🍽️";
+    const available = prod && prod.stock != null ? prod.stock : null;
+    const itemIssue = stockIssues.find(issue => issue.id === item.id);
     return `
     <div class="cart-item">
       <div class="cart-item-image">${icon}</div>
       <div class="cart-item-info">
         <div class="cart-item-name">${item.name}</div>
         <div class="cart-item-unit">${item.unit} · ${fmt(item.price, currency)} c/u</div>
+        ${itemIssue ? `<div class="cart-stock-warning">${itemIssue.message}</div>` : available != null ? `<div class="cart-stock-available">${available} disponible${available === 1 ? "" : "s"}</div>` : ""}
         <div class="cart-item-bottom">
           <div class="cart-qty">
             <button onclick="updateCartQty('${item.id}', -1)">−</button>
@@ -290,7 +295,27 @@ function renderCart() {
   $("#cartSubtotal").textContent = fmt(subtotal, currency);
   $("#cartDelivery").textContent = fmt(delivery, currency);
   $("#cartTotal").textContent = fmt(total, currency);
+  $("#cartStockNotice").innerHTML = stockIssues.length
+    ? "Actualiza las cantidades marcadas antes de continuar."
+    : "Stock reservado al confirmar el pedido."
+  $("#cartStockNotice").classList.toggle("warning", stockIssues.length > 0);
+  $("#checkoutBtn").disabled = stockIssues.length > 0;
   footer.style.display = "block";
+}
+
+function getCartStockIssues() {
+  const products = getProducts();
+  return state.cart.reduce((issues, item) => {
+    const product = products.find(p => p.id === item.id);
+    if (!product) {
+      issues.push({ id: item.id, message: "Producto no disponible" });
+    } else if (!product.active || (product.stock != null && product.stock <= 0)) {
+      issues.push({ id: item.id, message: "Agotado: quítalo del carrito" });
+    } else if (product.stock != null && item.qty > product.stock) {
+      issues.push({ id: item.id, message: `Solo quedan ${product.stock}; ajusta la cantidad` });
+    }
+    return issues;
+  }, []);
 }
 
 /* =====================================================
@@ -304,14 +329,16 @@ function openProductModal(id) {
   state.modalQty = 1;
 
   const stock = product.stock != null ? product.stock : 999;
+  const inCart = state.cart.find(item => item.id === id);
+  const availableStock = Math.max(0, stock - (inCart ? inCart.qty : 0));
   $("#modalEmoji").textContent = getIcon(product.category, product.id);
   $("#modalCategory").textContent = product.category;
   $("#modalName").textContent = product.name;
   $("#modalUnit").textContent = product.unit;
-  $("#modalStock").textContent = `Stock: ${stock} disponible${stock === 1 ? "" : "s"}`;
-  $("#modalStock").classList.toggle("hidden", stock > 20);
-  $("#qtyPlus").disabled = stock <= 1;
-  if (stock <= 0) $("#addToCartBtn").disabled = true;
+  $("#modalStock").textContent = availableStock > 0
+    ? `${availableStock} disponible${availableStock === 1 ? "" : "s"} para agregar`
+    : "No hay más unidades disponibles";
+  $("#modalStock").classList.remove("hidden");
 
   const desc = product.type === "sin_freir"
     ? "Producto crudo preparado artesanalmente. Fríelo en casa para disfrutarlo recién hecho, con el punto perfecto. Congelación recomendada si no se consume el mismo día."
@@ -333,7 +360,8 @@ function updateModalTotal() {
   if (!state.modalProduct) return;
   const config = getConfig();
   const total = state.modalProduct.price * state.modalQty;
-  const maxStock = state.modalProduct.stock != null ? state.modalProduct.stock : 999;
+  const inCart = state.cart.find(item => item.id === state.modalProduct.id);
+  const maxStock = state.modalProduct.stock != null ? Math.max(0, state.modalProduct.stock - (inCart ? inCart.qty : 0)) : 999;
   $("#qtyValue").textContent = state.modalQty;
   $("#modalTotal").textContent = fmt(total, config.business.currency);
   $("#qtyMinus").disabled = state.modalQty <= 1;
@@ -346,6 +374,12 @@ function updateModalTotal() {
 ===================================================== */
 function openCheckoutModal() {
   if (state.cart.length === 0) return;
+  const stockIssues = getCartStockIssues();
+  if (stockIssues.length) {
+    renderCart();
+    showToast("Actualiza el stock de tu carrito antes de continuar", "⚠️");
+    return;
+  }
   const config = getConfig();
   const currency = config.business.currency;
   const minDate = new Date();
@@ -401,6 +435,7 @@ function validateCheckout() {
 }
 
 function reserveCartStock() {
+  if (getCartStockIssues().length) return false;
   const products = getProducts();
   const updatedProducts = products.map(product => {
     const item = state.cart.find(cartItem => cartItem.id === product.id);
@@ -417,6 +452,7 @@ function reserveCartStock() {
 }
 
 function sendWhatsApp() {
+  if (checkoutInProgress) return;
   if (!validateCheckout()) {
     showToast("Completa los campos obligatorios", "⚠️");
     return;
@@ -457,6 +493,8 @@ function sendWhatsApp() {
     return;
   }
 
+  checkoutInProgress = true;
+  $("#sendWhatsApp").disabled = true;
   const url = `https://wa.me/${config.business.whatsapp}?text=${encodeURIComponent(msg)}`;
   window.open(url, "_blank");
 
@@ -467,6 +505,7 @@ function sendWhatsApp() {
     updateCartCount();
     renderCart();
     renderProducts();
+    checkoutInProgress = false;
     showToast("¡Pedido enviado por WhatsApp!", "✅");
   }, 800);
 }
@@ -524,7 +563,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (state.modalQty > 1) { state.modalQty--; updateModalTotal(); }
   });
   $("#qtyPlus").addEventListener("click", () => {
-    const maxStock = state.modalProduct && state.modalProduct.stock != null ? state.modalProduct.stock : 999;
+    const inCart = state.modalProduct && state.cart.find(item => item.id === state.modalProduct.id);
+    const maxStock = state.modalProduct && state.modalProduct.stock != null
+      ? Math.max(0, state.modalProduct.stock - (inCart ? inCart.qty : 0))
+      : 999;
     if (state.modalQty < maxStock) { state.modalQty++; updateModalTotal(); }
   });
   $("#addToCartBtn").addEventListener("click", () => {
