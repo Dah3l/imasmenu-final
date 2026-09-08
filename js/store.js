@@ -400,6 +400,22 @@ function validateCheckout() {
   return valid;
 }
 
+function reserveCartStock() {
+  const products = getProducts();
+  const updatedProducts = products.map(product => {
+    const item = state.cart.find(cartItem => cartItem.id === product.id);
+    if (!item || product.stock == null) return product;
+
+    const newStock = product.stock - item.qty;
+    if (newStock < 0) return null;
+    return { ...product, stock: newStock };
+  });
+
+  if (updatedProducts.some(product => product === null)) return false;
+  saveProducts(updatedProducts);
+  return true;
+}
+
 function sendWhatsApp() {
   if (!validateCheckout()) {
     showToast("Completa los campos obligatorios", "⚠️");
@@ -433,6 +449,13 @@ function sendWhatsApp() {
   msg += `💳 *Método de pago:* ${paymentLabels[payment]}\n`;
   if (notes) msg += `📝 *Notas:* ${notes}\n`;
   msg += `\n_¡Gracias por elegir ${config.business.name}!_`;
+
+  if (!reserveCartStock()) {
+    showToast("Algunos productos ya no tienen stock suficiente", "⚠️");
+    renderCart();
+    renderAll();
+    return;
+  }
 
   const url = `https://wa.me/${config.business.whatsapp}?text=${encodeURIComponent(msg)}`;
   window.open(url, "_blank");
@@ -534,4 +557,10 @@ document.addEventListener("DOMContentLoaded", () => {
   updateCartCount();
   renderAll();
   renderCart();
+
+  window.addEventListener("storage", (event) => {
+    if (event.key !== "imas_products") return;
+    renderAll();
+    renderCart();
+  });
 });
