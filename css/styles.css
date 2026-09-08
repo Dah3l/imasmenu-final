@@ -1,0 +1,258 @@
+/* ============ RESET & VARIABLES ============ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --cream-50: #fdf6ec;
+  --cream-100: #f8ead7;
+  --cream-200: #f0d9b8;
+  --sand: #e8c9a0;
+  --terracotta: #c97b5c;
+  --terracotta-dark: #a65838;
+  --brown-700: #4a2c1a;
+  --brown-800: #3a1f12;
+  --brown-900: #2a160b;
+  --gold: #d4a574;
+  --gold-dark: #b8894f;
+  --accent: #e07856;
+  --success: #6b9060;
+  --danger: #c04040;
+  --shadow-sm: 0 2px 8px rgba(74, 44, 26, 0.08);
+  --shadow-md: 0 8px 24px rgba(74, 44, 26, 0.12);
+  --shadow-lg: 0 20px 60px rgba(74, 44, 26, 0.2);
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
+  --radius-xl: 30px;
+  --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--cream-50);
+  color: var(--brown-800);
+  line-height: 1.6;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  background-image:
+    radial-gradient(circle at 10% 20%, rgba(212, 165, 116, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(224, 120, 86, 0.06) 0%, transparent 40%);
+}
+
+h1, h2, h3, h4 { font-family: 'Playfair Display', serif; font-weight: 700; color: var(--brown-900); }
+button { font-family: inherit; cursor: pointer; border: none; background: none; }
+input, textarea, select { font-family: inherit; }
+a { text-decoration: none; color: inherit; }
+
+/* ============ FORMULARIOS ============ */
+.form-group { margin-bottom: 16px; }
+.form-label { display: block; font-size: 13px; font-weight: 600; color: var(--brown-800); margin-bottom: 6px; }
+.form-input, .form-textarea, .form-select {
+  width: 100%; padding: 12px 14px;
+  border: 1.5px solid rgba(74, 44, 26, 0.15);
+  border-radius: var(--radius-sm); background: white;
+  font-size: 14px; color: var(--brown-800);
+  transition: all var(--transition);
+}
+.form-input:focus, .form-textarea:focus, .form-select:focus {
+  outline: none; border-color: var(--terracotta);
+  box-shadow: 0 0 0 4px rgba(201, 123, 92, 0.1);
+}
+.form-textarea { min-height: 70px; resize: vertical; font-family: inherit; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-error { font-size: 12px; color: var(--danger); margin-top: 4px; display: none; }
+.form-group.error .form-error { display: block; }
+.form-group.error .form-input,
+.form-group.error .form-textarea { border-color: var(--danger); }
+
+/* ============ BOTONES ============ */
+.btn-primary {
+  padding: 14px 28px;
+  background: linear-gradient(135deg, var(--terracotta) 0%, var(--accent) 100%);
+  color: white; border-radius: var(--radius-md);
+  font-size: 15px; font-weight: 600;
+  display: inline-flex; align-items: center; gap: 8px;
+  transition: all var(--transition);
+  box-shadow: var(--shadow-sm);
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+/* ============ MODALES ============ */
+.modal-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(42, 22, 11, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  opacity: 0; pointer-events: none;
+  transition: opacity var(--transition);
+  display: grid; place-items: center;
+  padding: 20px;
+}
+.modal-backdrop.open { opacity: 1; pointer-events: auto; }
+.modal {
+  background: white; border-radius: var(--radius-lg);
+  max-width: 520px; width: 100%;
+  max-height: 90vh; overflow-y: auto;
+  transform: scale(0.92);
+  transition: transform var(--transition);
+  box-shadow: var(--shadow-lg);
+}
+.modal-backdrop.open .modal { transform: scale(1); }
+
+.modal-image {
+  aspect-ratio: 16 / 10;
+  background: linear-gradient(135deg, var(--cream-100) 0%, var(--cream-200) 100%);
+  display: grid; place-items: center; position: relative;
+}
+.modal-emoji { font-size: 140px; }
+.modal-close {
+  position: absolute; top: 12px; right: 12px;
+  width: 40px; height: 40px; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--brown-800); display: grid; place-items: center;
+  font-size: 20px; transition: all var(--transition);
+}
+.modal-close:hover { background: white; transform: rotate(90deg); }
+
+.modal-body { padding: 24px; }
+.modal-body .product-category { margin-bottom: 8px; }
+.modal-body .product-name { font-size: 24px; margin-bottom: 12px; }
+.modal-body .product-unit { font-size: 14px; margin-bottom: 16px; }
+
+.modal-description {
+  padding: 14px 16px; background: var(--cream-50);
+  border-radius: var(--radius-sm); font-size: 14px;
+  color: var(--brown-700); margin-bottom: 20px;
+  border-left: 3px solid var(--terracotta);
+}
+
+.quantity-selector {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 8px 8px 16px; background: var(--cream-50);
+  border-radius: var(--radius-md); margin-bottom: 16px;
+}
+.qty-label { font-size: 13px; color: var(--brown-700); font-weight: 600; }
+.qty-controls {
+  display: flex; align-items: center; gap: 10px;
+  background: white; padding: 4px;
+  border-radius: var(--radius-sm); box-shadow: var(--shadow-sm);
+}
+.qty-btn {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: var(--cream-100); color: var(--brown-800);
+  display: grid; place-items: center;
+  transition: all var(--transition);
+}
+.qty-btn:hover { background: var(--terracotta); color: white; }
+.qty-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.qty-value { font-weight: 700; font-size: 16px; min-width: 32px; text-align: center; }
+
+.modal-footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.modal-total { font-size: 13px; color: var(--brown-700); }
+.modal-total strong { display: block; font-size: 22px; color: var(--terracotta-dark); font-family: 'Playfair Display', serif; }
+
+.edit-modal .modal { max-width: 560px; }
+.edit-header {
+  padding: 20px 24px; border-bottom: 1px solid rgba(74, 44, 26, 0.08);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.edit-header h3 { font-size: 20px; }
+.edit-body { padding: 24px; }
+
+/* ============ EMOJI PICKER ============ */
+.emoji-picker {
+  display: flex; flex-wrap: wrap; gap: 4px;
+  padding: 8px; background: var(--cream-50);
+  border-radius: var(--radius-sm);
+  max-height: 120px; overflow-y: auto;
+}
+.emoji-option {
+  width: 36px; height: 36px;
+  border-radius: 8px; background: white;
+  display: grid; place-items: center;
+  font-size: 20px;
+  transition: all var(--transition);
+}
+.emoji-option:hover { background: var(--cream-200); transform: scale(1.1); }
+.emoji-option.selected { background: var(--terracotta); color: white; box-shadow: 0 2px 8px rgba(201, 123, 92, 0.4); }
+
+/* ============ PRODUCT CARD ============ */
+.product-card {
+  background: white; border-radius: var(--radius-md);
+  overflow: hidden; box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(74, 44, 26, 0.05);
+  transition: all var(--transition);
+  display: flex; flex-direction: column;
+  cursor: pointer; position: relative;
+}
+.product-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: rgba(201, 123, 92, 0.2); }
+
+.product-image {
+  aspect-ratio: 1;
+  background: linear-gradient(135deg, var(--cream-100) 0%, var(--cream-200) 100%);
+  display: grid; place-items: center;
+  position: relative; overflow: hidden;
+}
+.product-emoji {
+  font-size: 80px;
+  filter: drop-shadow(0 4px 12px rgba(74, 44, 26, 0.15));
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.product-card:hover .product-emoji { transform: scale(1.12) rotate(-3deg); }
+
+.product-type {
+  position: absolute; top: 12px; left: 12px;
+  padding: 4px 10px; border-radius: 12px;
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+  background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(4px);
+}
+.type-sin_freir { color: var(--terracotta-dark); }
+.type-preparado { color: var(--success); }
+
+.product-info { padding: 16px; display: flex; flex-direction: column; flex: 1; }
+.product-category { font-size: 11px; color: var(--brown-700); font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 6px; }
+.product-name { font-family: 'Playfair Display', serif; font-size: 17px; font-weight: 600; color: var(--brown-900); line-height: 1.3; margin-bottom: 4px; }
+.product-unit { font-size: 12px; color: var(--brown-700); margin-bottom: 14px; }
+.product-footer { display: flex; justify-content: space-between; align-items: center; margin-top: auto; }
+.product-price { font-size: 20px; font-weight: 700; color: var(--terracotta-dark); }
+.product-price span { font-size: 12px; color: var(--brown-700); font-weight: 500; }
+
+.add-btn {
+  width: 40px; height: 40px; border-radius: 12px;
+  background: var(--brown-900); color: white;
+  display: grid; place-items: center;
+  transition: all var(--transition);
+}
+.add-btn:hover { background: var(--terracotta); transform: scale(1.08); }
+
+.empty-state { grid-column: 1 / -1; text-align: center; padding: 64px 24px; color: var(--brown-700); }
+.empty-state svg { color: var(--gold); margin-bottom: 16px; }
+.empty-state h4 { font-size: 20px; margin-bottom: 8px; }
+
+/* ============ TOAST ============ */
+.toast {
+  position: fixed; bottom: 24px; left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: var(--brown-900); color: white;
+  padding: 12px 20px; border-radius: var(--radius-lg);
+  font-size: 14px; font-weight: 500; box-shadow: var(--shadow-lg);
+  z-index: 9999; opacity: 0; transition: all var(--transition);
+  display: inline-flex; align-items: center; gap: 8px;
+  max-width: calc(100vw - 40px);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ============ SCROLLBAR ============ */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--cream-50); }
+::-webkit-scrollbar-thumb { background: var(--sand); border-radius: 5px; }
+::-webkit-scrollbar-thumb:hover { background: var(--gold); }
+
+/* ============ RESPONSIVE (compartido) ============ */
+@media (max-width: 768px) {
+  .modal { max-height: 92vh; }
+  .modal-emoji { font-size: 100px; }
+  .modal-body { padding: 20px; }
+  .modal-body .product-name { font-size: 20px; }
+  .form-row { grid-template-columns: 1fr; }
+}
