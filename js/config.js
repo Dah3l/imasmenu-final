@@ -3,7 +3,7 @@
 ===================================================== */
 const DEFAULT_CONFIG = {
   business: {
-    name: "¡MAS!",
+    name: "¡I'MAS!",
     tagline: "Lo que necesitas...",
     social: "@I'MAS",
     address: "Alamar Z12",
