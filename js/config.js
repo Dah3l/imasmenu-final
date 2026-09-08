@@ -6,7 +6,7 @@ const DEFAULT_CONFIG = {
     name: "¡I'MAS!",
     tagline: "Lo que necesitas...",
     social: "@I'MAS",
-    address: "Alamar Z12",
+    address: "Alamar Zona 12",
     delivery_zone: "Alamar",
     delivery_fee: 200,
     currency: "CUP",
