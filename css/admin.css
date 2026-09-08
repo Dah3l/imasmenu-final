@@ -50,6 +50,31 @@ body { background: #f5e9d7; }
   font-size: 11px; color: var(--brown-700);
   text-align: center; background: var(--cream-50);
 }
+.password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.password-wrapper .form-input {
+  padding-right: 44px;
+  width: 100%;
+}
+.password-toggle {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--brown-700);
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: 4px;
+  transition: color var(--transition);
+}
+.password-toggle:hover { color: var(--brown-900); }
 .back-to-store {
   font-size: 13px; color: var(--brown-700);
   display: inline-flex; align-items: center; gap: 4px;

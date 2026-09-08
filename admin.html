@@ -32,7 +32,20 @@
       </div>
       <div class="form-group">
         <label class="form-label">Contraseña</label>
-        <input type="password" class="form-input" id="loginPass" placeholder="••••••••" autocomplete="current-password" />
+        <div class="password-wrapper">
+          <input type="password" class="form-input" id="loginPass" placeholder="••••••••" autocomplete="current-password" />
+          <button type="button" class="password-toggle" id="togglePass" aria-label="Mostrar contraseña" onclick="
+            var i=document.getElementById('loginPass');
+            var b=document.getElementById('togglePass');
+            if(i.type==='password'){i.type='text';b.innerHTML='<svg width=&quot;18&quot; height=&quot;18&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;><path d=&quot;M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24&quot;/><line x1=&quot;1&quot; y1=&quot;1&quot; x2=&quot;23&quot; y2=&quot;23&quot;/></svg>';b.setAttribute('aria-label','Ocultar contraseña');}
+            else{i.type='password';b.innerHTML='<svg width=&quot;18&quot; height=&quot;18&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;><path d=&quot;M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z&quot;/><circle cx=&quot;12&quot; cy=&quot;12&quot; r=&quot;3&quot;/></svg>';b.setAttribute('aria-label','Mostrar contraseña');}
+          ">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
+        </div>
         <div class="form-error">Contraseña incorrecta.</div>
       </div>
       <button class="btn-primary" style="width:100%; justify-content:center;" id="loginBtn">
@@ -46,7 +59,6 @@
       </div>
     </div>
     <div class="login-footer">
-      <p>Por defecto: <strong>admin</strong> / <strong>mas2025</strong></p>
     </div>
   </div>
 </div>
@@ -255,10 +267,16 @@
         </div>
       </div>
 
-      <div class="form-group">
-        <label class="form-label">Precio (CUP) *</label>
-        <input type="number" class="form-input" id="editPrice" min="0" step="1" placeholder="0" />
-        <div class="form-error">El precio debe ser mayor a 0.</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Precio (CUP) *</label>
+          <input type="number" class="form-input" id="editPrice" min="0" step="1" placeholder="0" />
+          <div class="form-error">El precio debe ser mayor a 0.</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Stock disponible</label>
+          <input type="number" class="form-input" id="editStock" min="0" step="1" placeholder="0" />
+        </div>
       </div>
 
       <div class="form-group">

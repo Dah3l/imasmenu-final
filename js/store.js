@@ -18,13 +18,13 @@ function saveCart() { localStorage.setItem("imas_cart", JSON.stringify(state.car
 function renderSectionTabs() {
   const sections = getSections();
   const products = getProducts();
-  const activeProducts = products.filter(p => p.active);
+  const available = products.filter(p => p.active && (p.stock == null || p.stock > 0));
 
   const tabs = [
-    { id: "all", name: "Todos", count: activeProducts.length },
+    { id: "all", name: "Todos", count: available.length },
     ...sections.map(s => ({
       id: s.id, name: s.name,
-      count: activeProducts.filter(p => p.sectionId === s.id).length
+      count: available.filter(p => p.sectionId === s.id).length
     }))
   ];
 
@@ -45,7 +45,7 @@ function renderSectionTabs() {
 
 function renderCategoryFilters() {
   const sections = getSections();
-  const products = getProducts().filter(p => p.active);
+  const products = getFilteredProducts();
   let cats = [...new Set(products.map(p => p.category))];
 
   if (state.sectionId !== "all") {
@@ -75,7 +75,7 @@ function renderCategoryFilters() {
 ===================================================== */
 function getFilteredProducts() {
   const sections = getSections();
-  let list = getProducts().filter(p => p.active);
+  let list = getProducts().filter(p => p.active && (p.stock == null || p.stock > 0));
   if (state.sectionId !== "all") list = list.filter(p => p.sectionId === state.sectionId);
   if (state.categoryId !== "all") list = list.filter(p => p.category === state.categoryId);
   if (state.searchQuery.trim()) {
@@ -119,11 +119,15 @@ function renderProducts() {
 
   grid.innerHTML = products.map(p => {
     const inCart = state.cart.find(c => c.id === p.id);
+    const stock = p.stock != null ? p.stock : 999;
+    const lowStock = stock > 0 && stock <= 5;
+    const outOfStock = stock <= 0;
     return `
-      <article class="product-card" data-id="${p.id}">
+      <article class="product-card ${outOfStock ? "out-of-stock" : ""}" data-id="${p.id}">
         <div class="product-image">
           <span class="product-type type-${p.type}">${p.type === "sin_freir" ? "Sin freír" : "Preparado"}</span>
           <span class="product-emoji">${getIcon(p.category, p.id)}</span>
+          ${outOfStock ? '<span class="sold-out-badge">Agotado</span>' : lowStock ? '<span class="low-stock-badge">Quedan ' + stock + '</span>' : ''}
         </div>
         <div class="product-info">
           <div class="product-category">${p.category}</div>
@@ -131,6 +135,7 @@ function renderProducts() {
           <div class="product-unit">${p.unit}</div>
           <div class="product-footer">
             <div class="product-price">${fmt(p.price, getConfig().business.currency)} <span>/ ${p.unit}</span></div>
+            ${outOfStock ? `<span class="no-stock-label">Sin stock</span>` : `
             <button class="add-btn" data-id="${p.id}" aria-label="Agregar ${p.name}">
               ${inCart ? `
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
@@ -142,6 +147,7 @@ function renderProducts() {
                 </svg>
               `}
             </button>
+            `}
           </div>
         </div>
       </article>
@@ -169,7 +175,15 @@ function addToCart(id, qty = 1) {
   const products = getProducts();
   const product = products.find(p => p.id === id);
   if (!product) return;
+  const maxStock = product.stock != null ? product.stock : 999;
+  if (maxStock <= 0) { showToast(`"${product.name}" agotado`, "⚠️"); return; }
   const existing = state.cart.find(c => c.id === id);
+  const currentQty = existing ? existing.qty : 0;
+  const newQty = currentQty + qty;
+  if (newQty > maxStock) {
+    showToast(`Solo hay ${maxStock} disponible${maxStock === 1 ? "" : "s"} de "${product.name}"`, "⚠️");
+    return;
+  }
   if (existing) existing.qty += qty;
   else state.cart.push({ id: product.id, name: product.name, category: product.category, unit: product.unit, price: product.price, qty });
   saveCart();
@@ -183,6 +197,15 @@ function addToCart(id, qty = 1) {
 function updateCartQty(id, delta) {
   const item = state.cart.find(c => c.id === id);
   if (!item) return;
+  if (delta > 0) {
+    const products = getProducts();
+    const product = products.find(p => p.id === id);
+    const maxStock = product && product.stock != null ? product.stock : 999;
+    if (item.qty + delta > maxStock) {
+      showToast(`Solo hay ${maxStock} disponible${maxStock === 1 ? "" : "s"} de "${item.name}"`, "⚠️");
+      return;
+    }
+  }
   item.qty += delta;
   if (item.qty <= 0) state.cart = state.cart.filter(c => c.id !== id);
   saveCart();
@@ -280,10 +303,15 @@ function openProductModal(id) {
   state.modalProduct = product;
   state.modalQty = 1;
 
+  const stock = product.stock != null ? product.stock : 999;
   $("#modalEmoji").textContent = getIcon(product.category, product.id);
   $("#modalCategory").textContent = product.category;
   $("#modalName").textContent = product.name;
   $("#modalUnit").textContent = product.unit;
+  $("#modalStock").textContent = `Stock: ${stock} disponible${stock === 1 ? "" : "s"}`;
+  $("#modalStock").classList.toggle("hidden", stock > 20);
+  $("#qtyPlus").disabled = stock <= 1;
+  if (stock <= 0) $("#addToCartBtn").disabled = true;
 
   const desc = product.type === "sin_freir"
     ? "Producto crudo preparado artesanalmente. Fríelo en casa para disfrutarlo recién hecho, con el punto perfecto. Congelación recomendada si no se consume el mismo día."
@@ -298,15 +326,19 @@ function closeProductModal() {
   $("#productModal").classList.remove("open");
   document.body.style.overflow = "";
   state.modalProduct = null;
+  $("#addToCartBtn").disabled = false;
 }
 
 function updateModalTotal() {
   if (!state.modalProduct) return;
   const config = getConfig();
   const total = state.modalProduct.price * state.modalQty;
+  const maxStock = state.modalProduct.stock != null ? state.modalProduct.stock : 999;
   $("#qtyValue").textContent = state.modalQty;
   $("#modalTotal").textContent = fmt(total, config.business.currency);
   $("#qtyMinus").disabled = state.modalQty <= 1;
+  $("#qtyPlus").disabled = state.modalQty >= maxStock;
+  $("#addToCartBtn").disabled = maxStock <= 0;
 }
 
 /* =====================================================
@@ -468,7 +500,10 @@ document.addEventListener("DOMContentLoaded", () => {
   $("#qtyMinus").addEventListener("click", () => {
     if (state.modalQty > 1) { state.modalQty--; updateModalTotal(); }
   });
-  $("#qtyPlus").addEventListener("click", () => { state.modalQty++; updateModalTotal(); });
+  $("#qtyPlus").addEventListener("click", () => {
+    const maxStock = state.modalProduct && state.modalProduct.stock != null ? state.modalProduct.stock : 999;
+    if (state.modalQty < maxStock) { state.modalQty++; updateModalTotal(); }
+  });
   $("#addToCartBtn").addEventListener("click", () => {
     if (state.modalProduct) { addToCart(state.modalProduct.id, state.modalQty); closeProductModal(); }
   });
